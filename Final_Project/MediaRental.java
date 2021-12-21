@@ -1,10 +1,14 @@
 package Final_Project;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-public class MediaRental implements MediaRentalInt{
+public class MediaRental implements MediaRentalInt, Serializable {
+
+
+//    private static final long serialVersionUID = 628789568975888036L;
 
     //    This ArrayList is sorted by media title ascending
     //    Do NOT add to it except throw the addMedia method
@@ -212,7 +216,21 @@ public class MediaRental implements MediaRentalInt{
      */
     @Override
     public boolean removeFromCart(String customerName, String mediaTitle) {
-        return false;
+
+        Customer c = searchCustomerByName(customerName);
+        if ( c == null ) {
+            return false;
+        }
+
+        Media m = searchMediaByTitle(mediaTitle);
+
+        if ( m == null ) {
+            return false;
+        }
+
+        c.AddToCart(m);
+
+        return true;
     }
 
     /**
@@ -232,7 +250,16 @@ public class MediaRental implements MediaRentalInt{
      */
     @Override
     public String processRequests() {
-        return null;
+
+        String res = "";
+
+        for ( Customer c : customers ) {
+
+            res += c.proccess_requests();
+        }
+
+        return res;
+
     }
 
     /**

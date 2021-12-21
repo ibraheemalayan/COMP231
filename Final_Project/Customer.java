@@ -1,13 +1,16 @@
 package Final_Project;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 enum PlanType {
     LIMITED,
     UNLIMITED
 }
 
-public class Customer {
+public class Customer implements Serializable {
 
     public static int limited_plan_limit = 2;
 
@@ -41,10 +44,6 @@ public class Customer {
         return true;
     }
 
-    public boolean AddToCart(){
-        return true;
-    }
-
     public String getName() {
         return name;
     }
@@ -65,6 +64,45 @@ public class Customer {
     }
 
     public void AddToCart(Media m){
+        cart.add(m);
+    }
+
+    public String proccess_requests(){
+
+        String res = "";
+        for ( Media m : cart ) {
+
+            if ( m.available() && this.canRent() ){
+                m.rent_media();
+                this.rented.add(m);
+                res += "Sending " + m.getTitle() + " to " + this.getName() + "\n";
+            }
+
+        }
+        return res;
+    }
+
+    public void return_media(Media m){
+
+//        for ( Media m : cart ) {
+//
+//            if ( m.available() && this.canRent() ){
+//                m.rent_media();
+//                this.rented.add(m);
+//                res += "Sending " + m.getTitle() + " to " + this.getName() + "\n";
+//            }
+//
+//        }
+//        return res;
+    }
+
+    private int searchMediaByTitle(String Title, ArrayList<Media> media){
+
+        return Collections.binarySearch(media, new Media(Title, 0), Comparator.comparing(Media::getTitle));
+
+    }
+
+    public void RemoveFromCart(Media m){
         cart.add(m);
     }
 

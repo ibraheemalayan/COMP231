@@ -2,6 +2,7 @@ package Final_Project;
 
 import org.junit.Test;
 
+import java.io.*;
 import java.util.ArrayList;
 
 public class Driver {
@@ -20,6 +21,98 @@ public class Driver {
 
         String illegal_plan = "Unlimited Pro";
         Customer c = new Customer("Some Name", "Some address", illegal_plan);
+    }
+
+
+    @Test
+    public void testFileIO(){
+
+        MediaRental sys = new MediaRental();
+
+        sys.addAlbum("New Album", 6, "John", "song1,song2,song3");
+        sys.addAlbum("Second Album", 65, "John", "the long song");
+        sys.addAlbum("The Album", 36, "BigSam", "songA,songB,songC");
+
+        sys.addGame("Call Of Duty", 2, 30.6);
+        sys.addGame("Need For Speed", 8, 28.1);
+        sys.addGame("Rocket League", 327, 40);
+
+        sys.addCustomer("Ahmad","Jerusalem","limited" );
+        sys.addCustomer("Asad","Ramallah","limited" );
+        sys.addCustomer("Saeed","Jerusalem","unlimited" );
+
+        sys.addToCart("Asad", "Call Of Duty");
+        sys.addToCart("Ahmad", "Second Album");
+        sys.addToCart("Ahmad", "The Album");
+        sys.addToCart("Ahmad", "Call Of Duty");
+        sys.addToCart("Saeed", "Call Of Duty");
+        sys.addToCart("Rami", "Call Of Duty");
+        sys.addToCart("Asad", "New Game");
+
+        System.out.println(sys.getAllCustomersInfo());
+
+        System.out.println(sys.processRequests());
+
+        System.out.println(sys.getAllCustomersInfo());
+
+        System.out.println("Writing to File ....");
+
+        ObjectOutputStream oos = null;
+        FileOutputStream fout = null;
+        try{
+            fout = new FileOutputStream("test.my_own_extension" );
+            oos = new ObjectOutputStream(fout);
+            oos.writeObject(sys);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            if(oos != null){
+                try {
+                    oos.close();
+                } catch (IOException e) {
+                    System.out.println("Unable To Close Object Writer");
+                }
+            }
+        }
+
+        try {
+            oos.close();
+            fout.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        MediaRental sys2 = null;
+
+        // Deserialization
+        try
+        {
+            // Reading the object from a file
+            FileInputStream file = new FileInputStream("test.my_own_extension");
+            ObjectInputStream in = new ObjectInputStream(file);
+
+            // Method for deserialization of object
+            sys2 = (MediaRental) in.readObject();
+
+            in.close();
+            file.close();
+
+            System.out.println("Object has been deserialized ");
+            System.out.println("Media >>>" + sys2.getAllMediaInfo());
+            System.out.println("Customers >>>" + sys2.getAllCustomersInfo());
+        }
+
+        catch(IOException ex)
+        {
+            System.out.println("IOException is caught");
+            ex.printStackTrace();
+        }
+
+        catch(ClassNotFoundException ex)
+        {
+            System.out.println("ClassNotFoundException is caught");
+        }
     }
 
     @Test
@@ -106,9 +199,44 @@ public class Driver {
 
 
     public void testingRemovingFromCart(){}
-    public void testProcessingRequestsOne(){}
+
+    @Test
+    public void testProcessingRequestsOne(){
+
+        MediaRental sys = new MediaRental();
+
+        sys.addAlbum("New Album", 6, "John", "song1,song2,song3");
+        sys.addAlbum("Second Album", 65, "John", "the long song");
+        sys.addAlbum("The Album", 36, "BigSam", "songA,songB,songC");
+
+        sys.addGame("Call Of Duty", 2, 30.6);
+        sys.addGame("Need For Speed", 8, 28.1);
+        sys.addGame("Rocket League", 327, 40);
+
+        sys.addCustomer("Ahmad","Jerusalem","limited" );
+        sys.addCustomer("Asad","Ramallah","limited" );
+        sys.addCustomer("Saeed","Jerusalem","unlimited" );
+
+        sys.addToCart("Asad", "Call Of Duty");
+        sys.addToCart("Ahmad", "Second Album");
+        sys.addToCart("Ahmad", "The Album");
+        sys.addToCart("Ahmad", "Call Of Duty");
+        sys.addToCart("Saeed", "Call Of Duty");
+        sys.addToCart("Rami", "Call Of Duty");
+        sys.addToCart("Asad", "New Game");
+
+        System.out.println(sys.getAllCustomersInfo());
+
+        System.out.println(sys.processRequests());
+
+        System.out.println(sys.getAllCustomersInfo());
+    }
+
+
     public void testProcessingRequestsTwo(){}
-    public void testReturnMedia(){}
+    public void testReturnMedia(){
+
+    }
 
 
     @Test
