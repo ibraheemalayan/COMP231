@@ -7,12 +7,58 @@ import java.util.ArrayList;
 
 public class Driver {
 
+    static MediaRental loadFile(){
+        MediaRental sys2 = null;
+
+        // Deserialization
+        try
+        {
+            // Reading the object from a file
+            FileInputStream file = new FileInputStream("RentalSystemState.save");
+            ObjectInputStream in = new ObjectInputStream(file);
+
+            // Method for deserialization of object
+            sys2 = (MediaRental) in.readObject();
+
+            in.close();
+            file.close();
+
+            System.out.println("\nObject has been deserialized \n\n");
+        }
+
+        catch(FileNotFoundException ex)
+        {
+            System.out.println("FileNotFoundException is caught");
+        }
+
+        catch(IOException ex)
+        {
+            System.out.println("IOException is caught");
+        }
+
+        catch(ClassNotFoundException ex)
+        {
+            System.out.println("ClassNotFoundException is caught");
+        }
+
+        if ( sys2 == null ){
+            sys2 = new MediaRental();
+        }
+
+        return sys2;
+    }
+
     public static void main(String[] args) {
 
-        MediaRental m = new MediaRental();
+        // To use data saved in the file
+        MediaRental m = loadFile();
 
-//        m.addCustomer();
-//        m.addAlbum();
+        // To construct a new empty system
+        MediaRental m2 = new MediaRental();
+
+        // Run Tests
+
+
 
     }
 
@@ -20,7 +66,7 @@ public class Driver {
     public void InvalidPlanTest() {
 
         String illegal_plan = "Unlimited Pro";
-        Customer c = new Customer("Some Name", "Some address", illegal_plan);
+        new Customer("Some Name", "Some address", illegal_plan);
     }
 
 
@@ -49,81 +95,36 @@ public class Driver {
         sys.addToCart("Rami", "Call Of Duty");
         sys.addToCart("Asad", "New Game");
 
-        System.out.println(sys.getAllCustomersInfo());
-
         System.out.println(sys.processRequests());
 
+        System.out.println("Data to be written >> \n");
+
         System.out.println(sys.getAllCustomersInfo());
 
-        System.out.println("Writing to File ....");
+        System.out.println("\n\n--------------- \n File Was Written, reading data in a new object \n---------------\n\n");
 
-        ObjectOutputStream oos = null;
-        FileOutputStream fout = null;
-        try{
-            fout = new FileOutputStream("test.my_own_extension" );
-            oos = new ObjectOutputStream(fout);
-            oos.writeObject(sys);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
-            if(oos != null){
-                try {
-                    oos.close();
-                } catch (IOException e) {
-                    System.out.println("Unable To Close Object Writer");
-                }
-            }
-        }
+        MediaRental sys2 = loadFile();
 
-        try {
-            oos.close();
-            fout.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        System.out.println("Read Data >> \n");
 
+        System.out.println(sys2.getAllCustomersInfo());
 
-        MediaRental sys2 = null;
+        // Must be same data
+        assert sys2.getAllCustomersInfo().equals( sys.getAllCustomersInfo() );
 
-        // Deserialization
-        try
-        {
-            // Reading the object from a file
-            FileInputStream file = new FileInputStream("test.my_own_extension");
-            ObjectInputStream in = new ObjectInputStream(file);
-
-            // Method for deserialization of object
-            sys2 = (MediaRental) in.readObject();
-
-            in.close();
-            file.close();
-
-            System.out.println("Object has been deserialized ");
-            System.out.println("Media >>>" + sys2.getAllMediaInfo());
-            System.out.println("Customers >>>" + sys2.getAllCustomersInfo());
-        }
-
-        catch(IOException ex)
-        {
-            System.out.println("IOException is caught");
-            ex.printStackTrace();
-        }
-
-        catch(ClassNotFoundException ex)
-        {
-            System.out.println("ClassNotFoundException is caught");
-        }
     }
 
     @Test
     public void CanRentTest() {
 
+        (new MediaRental()).setLimitedPlanLimit(2);
+
         Customer c = new Customer("Some Name", "Some address", PlanType.LIMITED);
 
-        c.RentMedia(new Game("COD MW3", 2, 23.2));
-        assert c.canRent() == true;
-        c.RentMedia(new Game("COD MW3", 2, 23.2));
-        assert c.canRent() == false;
+        c.RentMedia(new Game("COD MW2", 2, 23.2));
+        assert c.canRent();
+        c.RentMedia(new Game("COD MW3", 6, 23.2));
+        assert !c.canRent();
 
         Customer c2 = new Customer("Some Name", "Some address", PlanType.UNLIMITED);
 
@@ -132,7 +133,53 @@ public class Driver {
         c2.RentMedia(new Game("COD MW3", 2, 23.2));
         c2.RentMedia(new Game("COD MW3", 2, 23.2));
 
-        assert c2.canRent() == true;
+        assert c2.canRent();
+
+    }
+
+    @Test
+    public void changeLimit() {
+
+        MediaRental sys = new MediaRental();
+
+        sys.addCustomer("Ahmad","Jerusalem","limited" );
+        sys.addCustomer("Asad","Ramallah","limited" );
+
+        sys.addMovie("London Has Fallen", 12, "RB");
+        sys.addMovie("Angel Has Fallen", 75, "RB");
+        sys.addGame("Call Of Duty", 90, 30.6);
+
+        sys.addToCart("Ahmad", "London Has Fallen");
+        sys.addToCart("Ahmad", "Angel Has Fallen");
+        sys.addToCart("Ahmad", "Call Of Duty"); // shouldn't be rented
+
+
+
+        String pr1 = sys.processRequests();
+
+        System.out.println(pr1);
+
+        assert ("Sending London Has Fallen to Ahmad\n" +
+                "Sending Call Of Duty to Ahmad\n").equals(pr1);
+
+        System.out.println("\n------------------------\n" + sys.getAllCustomersInfo() + "\n\n" );
+        System.out.println(sys.getAllMediaInfo() + "\n" );
+        System.out.println("\n------------------------\n");
+
+        sys.setLimitedPlanLimit(5);
+
+        MediaRental sys2 = loadFile();
+
+        String pr2 = sys2.processRequests();
+
+        assert "Sending Angel Has Fallen to Ahmad\n".equals(pr2);
+
+        System.out.println(pr2);
+
+        System.out.println("\n------------------------\n" + sys2.getAllCustomersInfo() + "\n\n" );
+        System.out.println(sys2.getAllMediaInfo() + "\n" );
+        System.out.println("\n------------------------\n");
+
 
     }
 
@@ -140,13 +187,17 @@ public class Driver {
     public void testAddingCustomers(){
         MediaRental sys = new MediaRental();
 
+
+
         sys.addCustomer("Ahmad","Jerusalem","limited" );
         sys.addCustomer("Asad","Ramallah","limited" );
         sys.addCustomer("Saeed","Jerusalem","unlimited" );
         sys.addCustomer("Mohammad","Hebron","limited" );
         sys.addCustomer("Rami","Yafa","unlimited" );
 
-        System.out.println(sys.getAllCustomersInfo());
+        System.out.println("\n------------------------\n" + sys.getAllCustomersInfo() + "\n\n" );
+        System.out.println(sys.getAllMediaInfo() + "\n" );
+        System.out.println("\n------------------------\n");
     }
 
     @Test
@@ -167,7 +218,10 @@ public class Driver {
         sys.addMovie("Angel Has Fallen", 75, "RB");
         sys.addMovie("Hitman", 50, "LD");
 
-        System.out.println(sys.getAllMediaInfo());
+
+        System.out.println("\n------------------------\n" + sys.getAllCustomersInfo() + "\n\n" );
+        System.out.println(sys.getAllMediaInfo() + "\n" );
+        System.out.println("\n------------------------\n");
 
     }
 
@@ -189,16 +243,59 @@ public class Driver {
         sys.addCustomer("Saeed","Jerusalem","unlimited" );
 
         assert sys.addToCart("Asad", "Call Of Duty");
-        assert sys.addToCart("Rami", "Call Of Duty") == false;
-        assert sys.addToCart("Asad", "New Game") == false;
+        assert !sys.addToCart("Rami", "Call Of Duty");
+        assert !sys.addToCart("Asad", "New Game");
 
-        System.out.println(sys.getAllCustomersInfo());
+        System.out.println("\n------------------------\n" + sys.getAllCustomersInfo() + "\n\n" );
+        System.out.println(sys.getAllMediaInfo() + "\n" );
+        System.out.println("\n------------------------\n");
 
     }
 
 
+    @Test
+    public void testingRemovingFromCart(){
 
-    public void testingRemovingFromCart(){}
+        MediaRental sys = new MediaRental();
+
+        sys.addAlbum("New Album", 6, "John", "song1,song2,song3");
+        sys.addAlbum("Second Album", 65, "John", "the long song");
+        sys.addAlbum("The Album", 36, "BigSam", "songA,songB,songC");
+
+        sys.addGame("Call Of Duty", 2, 30.6);
+        sys.addGame("Need For Speed", 8, 28.1);
+        sys.addGame("Rocket League", 327, 40);
+
+        sys.addCustomer("Ahmad","Jerusalem","limited" );
+        sys.addCustomer("Asad","Ramallah","limited" );
+        sys.addCustomer("Saeed","Jerusalem","unlimited" );
+
+        sys.addToCart("Asad", "Call Of Duty");
+
+        sys.removeFromCart("Asad", "Call Of Duty");
+
+        sys.addToCart("Ahmad", "Second Album");
+        sys.addToCart("Ahmad", "The Album");
+        sys.addToCart("Ahmad", "Call Of Duty");
+        sys.addToCart("Saeed", "Call Of Duty");
+
+        sys.addToCart("Rami", "Call Of Duty");
+
+        sys.removeFromCart("Rami", "Call Of Duty");
+
+        sys.addToCart("Asad", "New Game");
+
+        System.out.println("\n------------------------\n" + sys.getAllCustomersInfo() + "\n\n" );
+        System.out.println(sys.getAllMediaInfo() + "\n" );
+        System.out.println("\n------------------------\n");
+
+        System.out.println(sys.processRequests());
+
+        System.out.println("\n------------------------\n" + sys.getAllCustomersInfo() + "\n\n" );
+        System.out.println(sys.getAllMediaInfo() + "\n" );
+        System.out.println("\n------------------------\n");
+
+    }
 
     @Test
     public void testProcessingRequestsOne(){
@@ -225,16 +322,89 @@ public class Driver {
         sys.addToCart("Rami", "Call Of Duty");
         sys.addToCart("Asad", "New Game");
 
-        System.out.println(sys.getAllCustomersInfo());
+        System.out.println("\n------------------------\n" + sys.getAllCustomersInfo() + "\n\n" );
+        System.out.println(sys.getAllMediaInfo() + "\n" );
+        System.out.println("\n------------------------\n");
+
+        System.out.println(sys.processRequests());
+
+        System.out.println("\n------------------------\n" + sys.getAllCustomersInfo() + "\n\n" );
+        System.out.println(sys.getAllMediaInfo() + "\n" );
+        System.out.println("\n------------------------\n");
+    }
+
+    @Test
+    public void testProcessingRequestsTwo(){
+
+        MediaRental sys = loadFile();
+
+        sys.addAlbum("New Album", 6, "John", "song1,song2,song3");
+        sys.addAlbum("Second Album", 65, "John", "the long song");
+        sys.addAlbum("The Album", 36, "BigSam", "songA,songB,songC");
+
+        sys.addGame("Call Of Duty", 2, 30.6);
+        sys.addGame("Need For Speed", 8, 28.1);
+        sys.addGame("Rocket League", 327, 40);
+
+        sys.addCustomer("Ahmad","Jerusalem","limited" );
+        sys.addCustomer("Asad","Ramallah","limited" );
+        sys.addCustomer("Saeed","Jerusalem","unlimited" );
+
+        sys.addToCart("Asad", "Call Of Duty");
+        sys.addToCart("Ahmad", "Second Album");
+        sys.addToCart("Ahmad", "The Album");
+        sys.addToCart("Ahmad", "Call Of Duty");
+        sys.addToCart("Saeed", "Call Of Duty");
+        sys.addToCart("Rami", "Call Of Duty");
+        sys.addToCart("Asad", "New Game");
+
+        System.out.println(sys.getAllCustomersInfo() + "\n\n" );
 
         System.out.println(sys.processRequests());
 
         System.out.println(sys.getAllCustomersInfo());
+
     }
 
-
-    public void testProcessingRequestsTwo(){}
+    @Test
     public void testReturnMedia(){
+
+        MediaRental sys = new MediaRental();
+
+        sys.addAlbum("New Album", 6, "John", "song1,song2,song3");
+        sys.addAlbum("Second Album", 65, "John", "the long song");
+        sys.addAlbum("The Album", 36, "BigSam", "songA,songB,songC");
+
+        sys.addGame("Call Of Duty", 2, 30.6);
+        sys.addGame("Need For Speed", 8, 28.1);
+        sys.addGame("Rocket League", 327, 40);
+
+        sys.addCustomer("Ahmad","Jerusalem","limited" );
+        sys.addCustomer("Asad","Ramallah","limited" );
+        sys.addCustomer("Saeed","Jerusalem","unlimited" );
+
+        sys.addToCart("Asad", "Call Of Duty");
+        sys.addToCart("Ahmad", "Second Album");
+        sys.addToCart("Ahmad", "The Album");
+        sys.addToCart("Ahmad", "Call Of Duty");
+        sys.addToCart("Saeed", "Call Of Duty");
+        sys.addToCart("Rami", "Call Of Duty");
+        sys.addToCart("Asad", "New Game");
+
+        System.out.println(sys.processRequests());
+
+        System.out.println("\n------------------------\n" + sys.getAllCustomersInfo() + "\n\n" );
+        System.out.println(sys.getAllMediaInfo() + "\n" );
+        System.out.println("\n------------------------\n");
+
+        sys.returnMedia("Ahmad", "Second Album");
+        sys.returnMedia("Saeed", "Call Of Duty");
+        sys.returnMedia("Rami", "Second Album");
+
+        System.out.println("\n------------------------\n" + sys.getAllCustomersInfo() + "\n\n" );
+        System.out.println(sys.getAllMediaInfo() + "\n" );
+        System.out.println("\n------------------------\n");
+
 
     }
 
@@ -290,7 +460,7 @@ public class Driver {
         assert search7.size() == 1;
         assert search7.get(0).equals("New Album");
 
-        ArrayList<String> search8 = sys.searchMedia("New Album",null,"SAMM",null);
+        ArrayList<String> search8 = sys.searchMedia("New Album",null,"SAM",null);
 
         assert search8.size() == 0;
 
@@ -303,7 +473,7 @@ public class Driver {
         assert search10.size() == 2;
         assert search10.get(0).equals("New Album");
 
-        ArrayList<String> search11 = sys.searchMedia("New Album",null,"John","songy");
+        ArrayList<String> search11 = sys.searchMedia("New Album",null,"John","song Y");
 
         assert search11.size() == 0;
 

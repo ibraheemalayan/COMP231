@@ -1,6 +1,6 @@
 package Final_Project;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,6 +22,27 @@ public class MediaRental implements MediaRentalInt, Serializable {
     public MediaRental() {
         customers = new ArrayList<Customer>();
         media = new ArrayList<Media>();
+    }
+
+    private void update_file(){
+        ObjectOutputStream oos = null;
+        FileOutputStream fout = null;
+        try{
+            fout = new FileOutputStream("RentalSystemState.save" );
+            oos = new ObjectOutputStream(fout);
+            oos.writeObject(this);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            if(oos != null){
+                try {
+                    oos.close();
+                    fout.close();
+                } catch (IOException e) {
+                    System.out.println("Unable To Close Writer");
+                }
+            }
+        }
     }
 
     /**
@@ -47,9 +68,15 @@ public class MediaRental implements MediaRentalInt, Serializable {
         int index = Collections.binarySearch(customers, new_c, Comparator.comparing(Customer::getName));
         if (index < 0) {
             index = -index - 1;
+        }else{
+            // Customer Already Exist
+            System.out.println("Customer Already Exists");
+            return;
         }
 
         customers.add(index, new_c);
+
+        update_file();
 
     }
 
@@ -83,6 +110,8 @@ public class MediaRental implements MediaRentalInt, Serializable {
         }
 
         media.add(index, m);
+
+        update_file();
 
     }
 
@@ -145,6 +174,7 @@ public class MediaRental implements MediaRentalInt, Serializable {
     @Override
     public void setLimitedPlanLimit(int value) {
         Customer.limited_plan_limit = value;
+        update_file(); // TODO check if object writer saves static fields
     }
 
     /**
@@ -204,6 +234,8 @@ public class MediaRental implements MediaRentalInt, Serializable {
 
         c.AddToCart(m);
 
+        update_file();
+
         return true;
     }
 
@@ -222,15 +254,12 @@ public class MediaRental implements MediaRentalInt, Serializable {
             return false;
         }
 
-        Media m = searchMediaByTitle(mediaTitle);
-
-        if ( m == null ) {
-            return false;
+        if ( c.RemoveFromCart(mediaTitle) ) {
+            update_file();
+            return true;
         }
 
-        c.AddToCart(m);
-
-        return true;
+        return false;
     }
 
     /**
@@ -258,6 +287,8 @@ public class MediaRental implements MediaRentalInt, Serializable {
             res += c.proccess_requests();
         }
 
+        update_file();
+
         return res;
 
     }
@@ -272,6 +303,18 @@ public class MediaRental implements MediaRentalInt, Serializable {
      */
     @Override
     public boolean returnMedia(String customerName, String mediaTitle) {
+
+
+        Customer c = searchCustomerByName(customerName);
+        if ( c == null ) {
+            return false;
+        }
+
+        if ( c.ReturnMedia(mediaTitle) ) {
+            update_file();
+            return true;
+        }
+
         return false;
     }
 

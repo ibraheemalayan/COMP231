@@ -66,34 +66,44 @@ public class Customer implements Serializable {
     public void AddToCart(Media m){
         cart.add(m);
     }
+    public boolean RemoveFromCart(String media_title){
+
+        int index = searchMediaByTitle(media_title, this.cart);
+        if ( index >= 0 ){
+            this.cart.remove(index);
+            return true;
+        }
+        return false;
+
+    }
 
     public String proccess_requests(){
 
         String res = "";
-        for ( Media m : cart ) {
-
+        for (int i = 0; i < cart.size(); i++) {
+            Media m = cart.get(i);
             if ( m.available() && this.canRent() ){
                 m.rent_media();
                 this.rented.add(m);
                 res += "Sending " + m.getTitle() + " to " + this.getName() + "\n";
+                this.cart.remove(m);
             }
 
         }
         return res;
     }
 
-    public void return_media(Media m){
+    public boolean ReturnMedia(String media_title){
 
-//        for ( Media m : cart ) {
-//
-//            if ( m.available() && this.canRent() ){
-//                m.rent_media();
-//                this.rented.add(m);
-//                res += "Sending " + m.getTitle() + " to " + this.getName() + "\n";
-//            }
-//
-//        }
-//        return res;
+        int index = searchMediaByTitle(media_title, this.rented);
+        if ( index >= 0 ){
+            this.rented.get(index).return_media();
+            this.rented.remove(index);
+            return true;
+        }
+        return false;
+
+
     }
 
     private int searchMediaByTitle(String Title, ArrayList<Media> media){
@@ -102,22 +112,18 @@ public class Customer implements Serializable {
 
     }
 
-    public void RemoveFromCart(Media m){
-        cart.add(m);
-    }
-
     public int count_rented(){
         return rented.size();
     }
 
     @Override
     public String toString() {
-        return "Customer{" +
+        return "Customer{\n\t" +
                 "name='" + name + '\'' +
                 ", address='" + address + '\'' +
                 ", plan=" + plan +
-                ", rented=" + rented +
-                ", cart=" + cart +
-                '}';
+                ", \n\trented=" + rented +
+                ", \n\tcart=  " + cart +
+                "}\n";
     }
 }
